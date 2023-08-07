@@ -45,6 +45,11 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
       - ${MYSQL_PORT}:${MYSQL_PORT}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 500M
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     container_name: devtool_phpmyadmin
@@ -64,6 +69,11 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
       - ./data/mongo:/data/db
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 50M
   rabbitmq:
     image: rabbitmq:management-alpine
     tty: true
@@ -75,3 +85,8 @@ services:
       RABBITMQ_DEFAULT_USER: root
     volumes:
       - ./data/rabbitmq:/var/lib/rabbitmq/mnesia/
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 100M
