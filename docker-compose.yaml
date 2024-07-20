@@ -58,7 +58,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 50M
+          memory: 200M
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
     container_name: devtool_rabbitmq
