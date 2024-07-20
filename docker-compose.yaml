@@ -1,8 +1,6 @@
-version: "3.7"
-
 services:
   redis:
-    image: redis:7.0
+    image: redis:7.2
     container_name: devtool_redis
     restart: always
     environment:
@@ -15,32 +13,18 @@ services:
       # - The ${variable:?message} syntax causes shell to exit with a non-zero
       #   code and print a message, when the variable is not set or empty
       - redis-server --requirepass "$${REDIS_PASSWORD:?REDIS_PASSWORD variable is not set}"
-
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
     volumes:
-      - ./data/redis:/data
-  # minio:
-  #     image: minio/minio:RELEASE.2021-01-08T21-18-21Z
-  #     container_name: devtool_minio
-  #     command: server /data
-  #     restart: always
-  #     environment:
-  #         MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-  #         MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-  #     ports:
-  #       - ${MINIO_PORT}:${MINIO_PORT}
+      - devtool_redis:/data
   mysql:
-    image: mysql
+    image: mysql:9.0
     container_name: devtool_mysql
+    platform: linux/amd64
     restart: always
-    # cap_add:
-    #     - SYS_NICE
     volumes:
-      - ./data/mysql:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password --innodb_buffer_pool_size=200M
-    # security_opt:
-    #     - seccomp:unconfined
+      - devtool_mysql:/var/lib/mysql
+    command: --innodb_buffer_pool_size=200M
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
@@ -49,7 +33,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 200M
+          memory: 300M
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
     container_name: devtool_phpmyadmin
@@ -60,7 +44,8 @@ services:
       PMA_HOST: ${PMA_DB_ENGINE}
       UPLOAD_LIMIT: 1000M
   mongo:
-    image: mongo:6.0
+    image: mongo:8.0-rc
+    container_name: devtool_mongo
     restart: always
     ports:
       - 27017:27017
@@ -68,7 +53,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
     volumes:
-      - ./data/mongo:/data/db
+      - devtool_mongo:/data/db
     deploy:
       resources:
         limits:
@@ -76,7 +61,9 @@ services:
           memory: 50M
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
+    container_name: devtool_rabbitmq
     tty: true
+    restart: always
     ports:
       - "15672:15672"
       - "5672:5672"
@@ -84,7 +71,7 @@ services:
       RABBITMQ_DEFAULT_PASS: example
       RABBITMQ_DEFAULT_USER: root
     volumes:
-      - ./data/rabbitmq:/var/lib/rabbitmq/mnesia/
+      - devtool_rabbitmq:/var/lib/rabbitmq/mnesia/
     deploy:
       resources:
         limits:
@@ -98,13 +85,21 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data/postgresql:/var/lib/postgresql/data
+      - devtool_postgres:/var/lib/postgresql/data
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: 100M
   zipkin:
+    container_name: devtool_zipkin
     image: ghcr.io/openzipkin/zipkin-slim:latest
     ports:
       - 9411:9411
+
+volumes:
+  devtool_redis:
+  devtool_mysql:
+  devtool_mongo:
+  devtool_rabbitmq:
+  devtool_postgres:
